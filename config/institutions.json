@@ -1,0 +1,9 @@
+{
+  "big5": [
+    { "abn": "48123123124", "name": "Commonwealth Bank of Australia",                 "short": "CBA",      "brand_color": "#FFB81C" },
+    { "abn": "33007457141", "name": "Westpac Banking Corporation",                    "short": "Westpac",  "brand_color": "#D5002B" },
+    { "abn": "12004044937", "name": "National Australia Bank Limited",                "short": "NAB",      "brand_color": "#000000" },
+    { "abn": "11005357522", "name": "Australia and New Zealand Banking Group Limited","short": "ANZ",      "brand_color": "#007DC5" },
+    { "abn": "46008583542", "name": "Macquarie Bank Limited",                         "short": "Macquarie","brand_color": "#6B4C9A" }
+  ]
+}
