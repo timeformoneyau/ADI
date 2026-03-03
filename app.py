@@ -5,74 +5,244 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-# ── Page config ───────────────────────────────────────────────────────────────
+# ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Australian Residential Lending ($FUM)", layout="wide")
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
+# ── CSS ────────────────────────────────────────────────────────────────────────
 st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <style>
-/* Metric cards */
-[data-testid="stMetric"] {
-    background: rgba(30,41,59,0.6);
-    border: 1px solid rgba(51,65,85,0.9);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+/* ── Base ──────────────────────────────────────────────────────────────── */
+html, body, [class*="css"], .stApp {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    background-color: #0B1220 !important;
+    color: #E6EDF6 !important;
 }
-[data-testid="stMetricLabel"] p {
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em !important;
-    text-transform: uppercase !important;
-    color: #94A3B8 !important;
+.block-container {
+    padding-top: 2.5rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 1440px !important;
 }
-[data-testid="stMetricValue"] {
-    font-size: 1.5rem !important;
+
+/* ── Title ─────────────────────────────────────────────────────────────── */
+h1 {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 2.75rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em !important;
+    color: #E6EDF6 !important;
+    line-height: 1.1 !important;
+    margin-bottom: 0.2rem !important;
+}
+h2, h3 {
+    color: #E6EDF6 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: #0D1526 !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+}
+[data-testid="stSidebar"] h1 {
+    font-size: 1rem !important;
     font-weight: 700 !important;
-    color: #F1F5F9 !important;
+    letter-spacing: 0 !important;
+    margin-bottom: 1.5rem !important;
+    color: #E6EDF6 !important;
 }
-[data-testid="stMetricDelta"] svg { display: none; }
-[data-testid="stMetricDelta"] > div {
-    font-size: 0.82rem !important;
+[data-testid="stSidebar"] .stRadio > label,
+[data-testid="stSidebar"] .stSlider > label {
+    font-size: 0.67rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: #6C7A99 !important;
+    margin-bottom: 6px !important;
+    display: block !important;
 }
-/* Section headers */
+
+/* ── Pill-style radio controls ─────────────────────────────────────────── */
+div[data-testid="stRadio"] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    background: rgba(11,18,32,0.9) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 8px !important;
+    padding: 3px !important;
+}
+div[data-testid="stRadio"] label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+    margin: 0 !important;
+}
+div[data-testid="stRadio"] label p {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #6C7A99 !important;
+    margin: 0 !important;
+    letter-spacing: 0.02em !important;
+    line-height: 1 !important;
+}
+div[data-testid="stRadio"] label:has(input:checked) {
+    background: #1E3A5F !important;
+}
+div[data-testid="stRadio"] label:has(input:checked) p {
+    color: #60A5FA !important;
+}
+div[data-testid="stRadio"] input[type="radio"] {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ── Section headers ───────────────────────────────────────────────────── */
 .section-head {
-    font-size: 1.0rem;
+    font-size: 0.67rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: #CBD5E1;
-    margin: 1.5rem 0 0.75rem 0;
+    color: #6C7A99;
+    margin: 2.5rem 0 1rem 0;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(51,65,85,0.8);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-/* Insights */
-.insight-box {
-    background: rgba(15,23,42,0.7);
-    border: 1px solid rgba(51,65,85,0.8);
-    border-radius: 10px;
-    padding: 1.25rem 1.5rem;
-    margin-top: 0.5rem;
+
+/* ── Metric flex row: equal-height cards ───────────────────────────────── */
+.metric-flex {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 0.25rem;
 }
-.insight-bullet {
+
+/* ── Metric card ───────────────────────────────────────────────────────── */
+.mcard {
+    flex: 1;
+    background: #111A2E;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 20px 22px 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 105px;
+}
+.mcard-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #A8B3CF;
+    line-height: 1.45;
+}
+.mcard-label small {
+    display: block;
+    font-size: 0.85em;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #6C7A99;
+    margin-top: 2px;
+}
+.mcard-body {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.mcard-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #E6EDF6;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.mcard-delta {
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    line-height: 1;
+}
+.pos { color: #22C55E; }
+.neg { color: #EF4444; }
+.neu { color: #A8B3CF; }
+.mcard-sub {
+    font-size: 0.7rem;
+    color: #6C7A99;
+    font-variant-numeric: tabular-nums;
+    margin-top: -4px;
+}
+
+/* ── Insights grid: equal-height cards ─────────────────────────────────── */
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 12px;
+    margin-top: 1rem;
+}
+.insight-card {
+    background: #111A2E;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
-    margin: 0.55rem 0;
+    gap: 10px;
+    font-size: 0.82rem;
     color: #CBD5E1;
-    font-size: 0.88rem;
-    line-height: 1.5;
+    line-height: 1.6;
+    min-height: 90px;
 }
-.insight-bullet::before {
-    content: "▸";
+.ins-icon {
     color: #3B82F6;
     flex-shrink: 0;
-    margin-top: 0.05rem;
+    font-size: 0.65rem;
+    padding-top: 0.35rem;
 }
+.insight-card.empty {
+    visibility: hidden;
+}
+
+/* ── Insights heading ──────────────────────────────────────────────────── */
+h3.insights-heading {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #E6EDF6 !important;
+    margin-bottom: 0 !important;
+}
+
+/* ── Misc ──────────────────────────────────────────────────────────────── */
+hr {
+    border-color: rgba(255,255,255,0.05) !important;
+    margin: 2rem 0 !important;
+}
+.stCaption, [data-testid="stCaptionContainer"] p {
+    color: #6C7A99 !important;
+    font-size: 0.77rem !important;
+}
+footer { visibility: hidden; }
+#MainMenu { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Config & data ─────────────────────────────────────────────────────────────
+# ── Config & data ──────────────────────────────────────────────────────────────
 @st.cache_data
 def load_config():
     with open("config/institutions.json") as f:
@@ -104,17 +274,21 @@ PALETTE = [
     "#A855F7","#0EA5E9","#BE185D","#22C55E","#E11D48","#2563EB",
     "#7C3AED","#059669","#DC2626","#CA8A04","#0369A1","#65A30D","#9333EA",
 ]
-OTHER_COLOR  = "#475569"
-BIG5_GROUP_COLOR    = "#2563EB"   # grouped Big 5 series
-NON_BIG5_GROUP_COLOR = "#64748B"  # grouped Non-Big 5 series
+OTHER_COLOR          = "#475569"
+BIG5_GROUP_COLOR     = "#2563EB"
+NON_BIG5_GROUP_COLOR = "#64748B"
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+def adj_color(color):
+    """NAB uses pure black — lift to dark navy so it's visible on dark bg."""
+    return "#252B3B" if color == "#000000" else color
+
+# ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Controls")
-    loan_type  = st.selectbox("Loan type",   list(LOAN_TYPE_MAP.keys()), index=0)
-    chart_mode = st.selectbox("Chart mode",  ["Institutions", "Big 5 vs Non–Big 5"], index=0)
+    loan_type  = st.radio("Loan type",  list(LOAN_TYPE_MAP.keys()), index=0)
+    chart_mode = st.radio("Chart mode", ["Institutions", "Big 5 vs Non–Big 5"], index=0)
     if chart_mode == "Institutions":
-        universe = st.selectbox("Universe",  ["Big 5 only", "All institutions"], index=0)
+        universe = st.radio("Universe", ["Big 5 only", "All institutions"], index=0)
         top_n    = st.slider("Top N institutions", 5, 25, 10) if universe == "All institutions" else None
     else:
         universe = None
@@ -122,19 +296,19 @@ with st.sidebar:
 
 value_col, system_col, share_col = LOAN_TYPE_MAP[loan_type]
 
-# ── Reference periods ─────────────────────────────────────────────────────────
-all_periods     = sorted(df["period"].unique())
-latest          = all_periods[-1]
-prev_period     = all_periods[-2] if len(all_periods) >= 2 else None
+# ── Reference periods ──────────────────────────────────────────────────────────
+all_periods      = sorted(df["period"].unique())
+latest           = all_periods[-1]
+prev_period      = all_periods[-2] if len(all_periods) >= 2 else None
 
 def nearest_period(target):
     t = pd.Timestamp(target)
     return min(all_periods, key=lambda p: abs((p - t).days))
 
-yoy_period      = nearest_period(latest - pd.DateOffset(years=1))
+yoy_period       = nearest_period(latest - pd.DateOffset(years=1))
 inception_period = nearest_period(pd.Timestamp("2019-03-01"))
 
-# ── Scalar helpers ────────────────────────────────────────────────────────────
+# ── Scalar helpers ─────────────────────────────────────────────────────────────
 def sys_val(period, col):
     return df[df["period"] == period][col].max()
 
@@ -147,30 +321,30 @@ def safe_pct(a, b):
 def safe_cagr(end, start, yrs):
     return ((end / start) ** (1 / yrs) - 1) * 100 if all(v and v > 0 for v in [end, start]) else None
 
-# ── Chart layout ──────────────────────────────────────────────────────────────
+# ── Chart layout ───────────────────────────────────────────────────────────────
 CHART_LAYOUT = dict(
-    plot_bgcolor  = "rgba(15,23,42,0.55)",
+    plot_bgcolor  = "rgba(13,21,38,0.85)",
     paper_bgcolor = "rgba(0,0,0,0)",
-    margin        = dict(t=20, b=20, l=0, r=0),
-    height        = 490,
+    margin        = dict(t=24, b=24, l=0, r=175),
+    height        = 510,
     hovermode     = "x unified",
-    font          = dict(color="#CBD5E1", family="Inter, system-ui, sans-serif", size=13),
+    font          = dict(color="#A8B3CF", family="Inter, system-ui, sans-serif", size=13),
     xaxis = dict(
         showgrid   = False,
         showline   = True,
-        linecolor  = "#334155",
-        tickcolor  = "#475569",
-        tickfont   = dict(color="#94A3B8", size=13),
+        linecolor  = "rgba(255,255,255,0.07)",
+        tickcolor  = "rgba(255,255,255,0.07)",
+        tickfont   = dict(color="#6C7A99", size=13),
         tickformat = "%b %Y",
         title      = None,
     ),
     yaxis = dict(
         showgrid   = True,
-        gridcolor  = "rgba(51,65,85,0.5)",
+        gridcolor  = "rgba(255,255,255,0.04)",
         gridwidth  = 1,
         showline   = False,
-        tickfont   = dict(color="#94A3B8", size=13),
-        title      = dict(text="Loan balance ($B)", font=dict(color="#94A3B8", size=13)),
+        tickfont   = dict(color="#6C7A99", size=13),
+        title      = dict(text="Loan balance ($B)", font=dict(color="#6C7A99", size=13)),
         tickprefix = "$",
         ticksuffix = "B",
         tickformat = ",.0f",
@@ -181,19 +355,22 @@ CHART_LAYOUT = dict(
         yanchor     = "middle",
         y           = 0.5,
         xanchor     = "left",
-        x           = 1.01,
-        font        = dict(size=14, color="#CBD5E1"),
+        x           = 1.02,
+        font        = dict(size=13, color="#A8B3CF", family="Inter, system-ui, sans-serif"),
         traceorder  = "reversed",
-        bgcolor     = "rgba(15,23,42,0.5)",
-        bordercolor = "#334155",
+        bgcolor     = "rgba(13,21,38,0.6)",
+        bordercolor = "rgba(255,255,255,0.06)",
         borderwidth = 1,
+    ),
+    hoverlabel = dict(
+        bgcolor    = "#141F35",
+        bordercolor= "rgba(255,255,255,0.08)",
+        font       = dict(size=13, color="#E6EDF6", family="Inter, system-ui, sans-serif"),
     ),
 )
 
 def make_stacked_area(series_list):
     fig = go.Figure()
-
-    # Pre-compute per-period visible totals (for % in hover)
     period_totals = pd.Series(0.0, index=all_periods)
     for s in series_list:
         period_totals += s["data"].reindex(all_periods).fillna(0) / 1000
@@ -202,7 +379,6 @@ def make_stacked_area(series_list):
         vals_bn    = s["data"].reindex(all_periods).fillna(0) / 1000
         pct_series = (vals_bn / period_totals.replace(0, np.nan) * 100).fillna(0)
         customdata = pct_series.values.reshape(-1, 1)
-
         fig.add_trace(go.Scatter(
             x             = all_periods,
             y             = vals_bn,
@@ -210,21 +386,20 @@ def make_stacked_area(series_list):
             mode          = "lines",
             stackgroup    = "one",
             fillcolor     = s["color"],
-            line          = dict(color="rgba(255,255,255,0.15)", width=0.8),
+            line          = dict(color="rgba(255,255,255,0.18)", width=1),
             customdata    = customdata,
             hovertemplate = (
                 "$%{y:,.2f}B · %{customdata[0]:.1f}%"
                 "<extra>" + s["name"] + "</extra>"
             ),
         ))
-
     fig.update_layout(**CHART_LAYOUT)
     return fig
 
-# ── Build series ──────────────────────────────────────────────────────────────
+# ── Build series ───────────────────────────────────────────────────────────────
 if chart_mode == "Big 5 vs Non–Big 5":
-    b5_by_period  = df[df["big5_flag"]].groupby("period")[value_col].sum()
-    sys_by_period = df.groupby("period")[system_col].max()
+    b5_by_period     = df[df["big5_flag"]].groupby("period")[value_col].sum()
+    sys_by_period    = df.groupby("period")[system_col].max()
     non_b5_by_period = (sys_by_period - b5_by_period).clip(lower=0)
     series = [
         {"name": "Non–Big 5", "color": NON_BIG5_GROUP_COLOR, "data": non_b5_by_period},
@@ -240,7 +415,7 @@ elif universe == "Big 5 only":
     ordered = pivot.mean().sort_values().index.tolist()
     series  = [
         {"name":  BIG5_CONFIG[a]["short"],
-         "color": BIG5_CONFIG[a]["brand_color"],
+         "color": adj_color(BIG5_CONFIG[a]["brand_color"]),
          "data":  pivot[a]}
         for a in ordered
     ]
@@ -258,7 +433,7 @@ else:  # All institutions
     for name in ordered:
         abn = df[df["institution_name"] == name]["abn"].iloc[0] if (df["institution_name"] == name).any() else None
         if abn and abn in BIG5_CONFIG:
-            color_map[name] = BIG5_CONFIG[abn]["brand_color"]
+            color_map[name] = adj_color(BIG5_CONFIG[abn]["brand_color"])
         else:
             color_map[name] = PALETTE[p_idx % len(PALETTE)]
             p_idx += 1
@@ -269,7 +444,7 @@ else:  # All institutions
         series.insert(0, {"name": f"Other ({len(other_names)} institutions)",
                           "color": OTHER_COLOR, "data": other_data})
 
-# ── Title + chart ─────────────────────────────────────────────────────────────
+# ── Title + chart ──────────────────────────────────────────────────────────────
 st.title("Australian Residential Lending ($FUM)")
 st.caption(
     f"APRA monthly ADI statistics  ·  Residential lending  ·  "
@@ -277,7 +452,7 @@ st.caption(
 )
 st.plotly_chart(make_stacked_area(series), use_container_width=True)
 
-# ── Compute metrics ───────────────────────────────────────────────────────────
+# ── Compute metrics ────────────────────────────────────────────────────────────
 sys_lat       = sys_val(latest,           system_col)
 sys_prev      = sys_val(prev_period,      system_col) if prev_period else None
 sys_yoy       = sys_val(yoy_period,       system_col)
@@ -309,85 +484,119 @@ b5_yoy_delta_m  = b5_lat - b5_yoy
 sys_yoy_delta_m = sys_lat - sys_yoy
 b5_contribution = (b5_yoy_delta_m / sys_yoy_delta_m * 100) if sys_yoy_delta_m else None
 
-# ── Format helpers ────────────────────────────────────────────────────────────
-def fbn(v):   return f"${v:,.1f}B" if v is not None else "—"
-def fpct(v):  return f"{v:.2f}%"   if v is not None else "—"
-def fpp(v):   return f"{v:+.2f}pp" if v is not None else "—"
-def fsign_bn(v): return f"{v:+,.1f}B" if v is not None else None
-def fsign_pct(v): return f"{v:+.2f}%" if v is not None else None
+# ── Format helpers ─────────────────────────────────────────────────────────────
+def fbn(v):       return f"${v:,.1f}B"  if v is not None else "—"
+def fpct(v):      return f"{v:.2f}%"    if v is not None else "—"
+def fpp(v):       return f"{v:+.2f}pp"  if v is not None else "—"
+def fsign_pct(v): return f"{v:+.2f}%"   if v is not None else None
 
-# ── MARKET SIZE cards ─────────────────────────────────────────────────────────
+# ── Metric card HTML builder ───────────────────────────────────────────────────
+def mcard(label, value, delta=None, pos=None, sub=None):
+    """
+    label : HTML string for card label (use <small> for subtitle)
+    value : main value string
+    delta : delta string shown inline RIGHT of value (optional)
+    pos   : True → green (#22C55E), False → red (#EF4444), None → muted grey
+    sub   : optional small text beneath the value row
+    """
+    cls    = "pos" if pos is True else ("neg" if pos is False else "neu")
+    d_html = f'<span class="mcard-delta {cls}">{delta}</span>' if delta else ""
+    s_html = f'<div class="mcard-sub">{sub}</div>' if sub else ""
+    return (
+        f'<div class="mcard">'
+        f'  <div class="mcard-label">{label}</div>'
+        f'  <div>'
+        f'    <div class="mcard-body">'
+        f'      <span class="mcard-value">{value}</span>'
+        f'      {d_html}'
+        f'    </div>'
+        f'    {s_html}'
+        f'  </div>'
+        f'</div>'
+    )
+
+# ── MARKET SIZE section ────────────────────────────────────────────────────────
 st.markdown('<div class="section-head">Market Size</div>', unsafe_allow_html=True)
 
-c1, c2, c3 = st.columns(3)
+lat_str = latest.strftime('%b %Y')
 
-with c1:
-    delta_parts = []
-    if mom_delta_bn is not None: delta_parts.append(f"{mom_delta_bn:+,.1f}B")
-    if mom_pct      is not None: delta_parts.append(f"({mom_pct:+.2f}%)")
-    st.metric(
-        f"Total Residential Loans (All ADIs)\nas at {latest.strftime('%b %Y')}",
-        fbn(sys_lat / 1000),
-        delta=" ".join(delta_parts) if delta_parts else None,
-        delta_color="off",
-        help="Aggregate balance across all licensed ADIs reporting to APRA",
+# Card 1 – Total system FUM
+c1_delta, c1_pos = None, None
+if mom_delta_bn is not None and mom_pct is not None:
+    c1_delta = f"{mom_delta_bn:+,.1f}B ({mom_pct:+.2f}%) MoM"
+    c1_pos   = mom_delta_bn > 0
+
+# Card 2 – Big 5 FUM
+c2_delta, c2_pos = None, None
+if b5_mom_delta_bn is not None and b5_mom_pct is not None:
+    c2_delta = f"{b5_mom_delta_bn:+,.1f}B ({b5_mom_pct:+.2f}%) MoM"
+    c2_pos   = b5_mom_delta_bn > 0
+
+# Card 3 – Big 5 share
+c3_delta, c3_pos = None, None
+share_parts = []
+if b5_shr_pp_mom is not None:
+    share_parts.append(f"{b5_shr_pp_mom:+.2f}pp MoM")
+if b5_shr_pp_yoy is not None:
+    share_parts.append(f"{b5_shr_pp_yoy:+.2f}pp YoY")
+if share_parts:
+    c3_delta = "  ·  ".join(share_parts)
+    c3_pos   = (b5_shr_pp_mom > 0) if b5_shr_pp_mom is not None else None
+
+ms_html = (
+    '<div class="metric-flex">'
+    + mcard(
+        f'Total Residential Loans<br><small>All ADIs · as at {lat_str}</small>',
+        fbn(sys_lat / 1000), c1_delta, c1_pos,
     )
-
-with c2:
-    delta_parts = []
-    if b5_mom_delta_bn is not None: delta_parts.append(f"{b5_mom_delta_bn:+,.1f}B")
-    if b5_mom_pct      is not None: delta_parts.append(f"({b5_mom_pct:+.2f}%)")
-    st.metric(
-        f"Big 5 Total Residential Lending\nas at {latest.strftime('%b %Y')}",
-        fbn(b5_lat / 1000),
-        delta=" ".join(delta_parts) if delta_parts else None,
-        delta_color="off",
+    + mcard(
+        f'Big 5 Residential Lending<br><small>as at {lat_str}</small>',
+        fbn(b5_lat / 1000), c2_delta, c2_pos,
     )
-
-with c3:
-    share_delta_parts = []
-    if b5_shr_pp_mom is not None: share_delta_parts.append(f"{b5_shr_pp_mom:+.2f}pp MoM")
-    if b5_shr_pp_yoy is not None: share_delta_parts.append(f"{b5_shr_pp_yoy:+.2f}pp YoY")
-    st.metric(
-        f"Big 5 Market Share\nas at {latest.strftime('%b %Y')}",
+    + mcard(
+        f'Big 5 Market Share<br><small>as at {lat_str}</small>',
         fpct(b5_shr_lat * 100) if b5_shr_lat else "—",
-        delta="  ·  ".join(share_delta_parts) if share_delta_parts else None,
-        delta_color="off",
+        c3_delta, c3_pos,
     )
+    + '</div>'
+)
+st.markdown(ms_html, unsafe_allow_html=True)
 
-# ── GROWTH cards ──────────────────────────────────────────────────────────────
+# ── GROWTH section ─────────────────────────────────────────────────────────────
 st.markdown('<div class="section-head">Growth</div>', unsafe_allow_html=True)
 
-c1, c2, c3 = st.columns(3)
+prev_str      = prev_period.strftime('%b %Y') if prev_period else ""
+yoy_str       = yoy_period.strftime('%b %Y')
+inception_str = inception_period.strftime('%b %Y')
 
-with c1:
-    label = (
-        f"Change vs Prior Month\n"
-        f"{prev_period.strftime('%b %Y') if prev_period else ''} → {latest.strftime('%b %Y')}"
-    )
-    st.metric(
-        label,
+g1_pos = (mom_pct  > 0) if mom_pct  is not None else None
+g2_pos = (yoy_pct  > 0) if yoy_pct  is not None else None
+
+gr_html = (
+    '<div class="metric-flex">'
+    + mcard(
+        f'Change vs Prior Month<br><small>{prev_str} → {lat_str}</small>',
         fbn(mom_delta_bn),
-        delta=fsign_pct(mom_pct),
-        delta_color="normal",
+        fsign_pct(mom_pct),
+        g1_pos,
     )
-
-with c2:
-    st.metric(
-        f"Year-on-Year Change\n{yoy_period.strftime('%b %Y')} → {latest.strftime('%b %Y')}",
+    + mcard(
+        f'Year-on-Year Change<br><small>{yoy_str} → {lat_str}</small>',
         fbn(yoy_delta_bn),
-        delta=fsign_pct(yoy_pct),
-        delta_color="normal",
+        fsign_pct(yoy_pct),
+        g2_pos,
     )
-
-with c3:
-    st.metric(
-        f"Average Annual Growth\n{inception_period.strftime('%b %Y')} → {latest.strftime('%b %Y')}",
+    + mcard(
+        f'Average Annual Growth<br><small>{inception_str} → {lat_str}</small>',
         fpct(avg_annual_growth) if avg_annual_growth else "—",
-        help="Compound annual growth rate from the start of the APRA data series",
+        None, None,
+        "Compound annual growth rate from inception",
     )
+    + '</div>'
+)
+st.markdown(gr_html, unsafe_allow_html=True)
 
-# ── Insights ──────────────────────────────────────────────────────────────────
+# ── Insights ───────────────────────────────────────────────────────────────────
 def inst_yoy_analysis(v_col, sys_col):
     g_lat  = df[df["period"] == latest].groupby("institution_name").agg(
                  v_lat=(v_col, "sum"), abn=("abn", "first"))
@@ -471,11 +680,25 @@ if avg_annual_growth is not None:
 
 st.divider()
 st.markdown("### Insights")
-bullet_html = "\n".join(
-    f'<div class="insight-bullet">{bold(b)}</div>' for b in bullets
-)
+
+# Pad to full rows of 3 so grid is even and all cards equal height
+while len(bullets) % 3 != 0:
+    bullets.append("")
+
+cards_html = ""
+for b in bullets:
+    if b:
+        cards_html += (
+            f'<div class="insight-card">'
+            f'  <span class="ins-icon">▸</span>'
+            f'  <span>{bold(b)}</span>'
+            f'</div>'
+        )
+    else:
+        cards_html += '<div class="insight-card empty"></div>'
+
 st.markdown(
-    f'<div class="insight-box">{bullet_html}</div>',
+    f'<div class="insights-grid">{cards_html}</div>',
     unsafe_allow_html=True,
 )
 
