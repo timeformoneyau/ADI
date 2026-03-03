@@ -8,14 +8,13 @@ import streamlit as st
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Australian Residential Lending ($FUM)", layout="wide")
 
-# ── CSS ────────────────────────────────────────────────────────────────────────
-st.markdown("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
-<style>
-/* ── Base ──────────────────────────────────────────────────────────────── */
-html, body, [class*="css"], .stApp {
+# ── CSS: global / Streamlit-internal overrides only ───────────────────────────
+# NOTE: @import for fonts (no <link> tags – they confuse Streamlit's parser).
+# All custom HTML components use inline styles for reliability.
+_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+html, body, [class*='css'], .stApp {
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     background-color: #0B1220 !important;
     color: #E6EDF6 !important;
@@ -25,8 +24,6 @@ html, body, [class*="css"], .stApp {
     padding-bottom: 3rem !important;
     max-width: 1440px !important;
 }
-
-/* ── Title ─────────────────────────────────────────────────────────────── */
 h1 {
     font-family: 'Inter', sans-serif !important;
     font-size: 2.75rem !important;
@@ -36,36 +33,30 @@ h1 {
     line-height: 1.1 !important;
     margin-bottom: 0.2rem !important;
 }
-h2, h3 {
-    color: #E6EDF6 !important;
-    font-family: 'Inter', sans-serif !important;
-}
+h2, h3 { color: #E6EDF6 !important; font-family: 'Inter', sans-serif !important; }
 
-/* ── Sidebar ───────────────────────────────────────────────────────────── */
-[data-testid="stSidebar"] {
+[data-testid='stSidebar'] {
     background: #0D1526 !important;
     border-right: 1px solid rgba(255,255,255,0.05) !important;
 }
-[data-testid="stSidebar"] h1 {
+[data-testid='stSidebar'] h1 {
     font-size: 1rem !important;
     font-weight: 700 !important;
     letter-spacing: 0 !important;
-    margin-bottom: 1.5rem !important;
     color: #E6EDF6 !important;
 }
-[data-testid="stSidebar"] .stRadio > label,
-[data-testid="stSidebar"] .stSlider > label {
+[data-testid='stSidebar'] .stRadio > label,
+[data-testid='stSidebar'] .stSlider > label {
     font-size: 0.67rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     color: #6C7A99 !important;
-    margin-bottom: 6px !important;
     display: block !important;
+    margin-bottom: 4px !important;
 }
 
-/* ── Pill-style radio controls ─────────────────────────────────────────── */
-div[data-testid="stRadio"] > div {
+div[data-testid='stRadio'] > div {
     display: flex !important;
     flex-direction: column !important;
     gap: 3px !important;
@@ -74,17 +65,16 @@ div[data-testid="stRadio"] > div {
     border-radius: 8px !important;
     padding: 3px !important;
 }
-div[data-testid="stRadio"] label {
+div[data-testid='stRadio'] label {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
     border-radius: 6px !important;
     padding: 7px 12px !important;
     cursor: pointer !important;
     transition: background 0.15s ease, color 0.15s ease !important;
     margin: 0 !important;
 }
-div[data-testid="stRadio"] label p {
+div[data-testid='stRadio'] label p {
     font-size: 12px !important;
     font-weight: 600 !important;
     color: #6C7A99 !important;
@@ -92,13 +82,13 @@ div[data-testid="stRadio"] label p {
     letter-spacing: 0.02em !important;
     line-height: 1 !important;
 }
-div[data-testid="stRadio"] label:has(input:checked) {
+div[data-testid='stRadio'] label:has(input:checked) {
     background: #1E3A5F !important;
 }
-div[data-testid="stRadio"] label:has(input:checked) p {
+div[data-testid='stRadio'] label:has(input:checked) p {
     color: #60A5FA !important;
 }
-div[data-testid="stRadio"] input[type="radio"] {
+div[data-testid='stRadio'] input[type='radio'] {
     position: absolute !important;
     opacity: 0 !important;
     width: 0 !important;
@@ -106,141 +96,93 @@ div[data-testid="stRadio"] input[type="radio"] {
     pointer-events: none !important;
 }
 
-/* ── Section headers ───────────────────────────────────────────────────── */
-.section-head {
-    font-size: 0.67rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: #6C7A99;
-    margin: 2.5rem 0 1rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* ── Metric flex row: equal-height cards ───────────────────────────────── */
-.metric-flex {
-    display: flex;
-    gap: 14px;
-    align-items: stretch;
-    width: 100%;
-    margin-bottom: 0.25rem;
-}
-
-/* ── Metric card ───────────────────────────────────────────────────────── */
-.mcard {
-    flex: 1;
-    background: #111A2E;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 8px;
-    padding: 20px 22px 18px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 105px;
-}
-.mcard-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: #A8B3CF;
-    line-height: 1.45;
-}
-.mcard-label small {
-    display: block;
-    font-size: 0.85em;
-    font-weight: 500;
-    letter-spacing: 0;
-    text-transform: none;
-    color: #6C7A99;
-    margin-top: 2px;
-}
-.mcard-body {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.mcard-value {
-    font-size: 1.9rem;
-    font-weight: 700;
-    color: #E6EDF6;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    line-height: 1;
-}
-.mcard-delta {
-    font-size: 0.82rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    line-height: 1;
-}
-.pos { color: #22C55E; }
-.neg { color: #EF4444; }
-.neu { color: #A8B3CF; }
-.mcard-sub {
-    font-size: 0.7rem;
-    color: #6C7A99;
-    font-variant-numeric: tabular-nums;
-    margin-top: -4px;
-}
-
-/* ── Insights grid: equal-height cards ─────────────────────────────────── */
-.insights-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-auto-rows: 1fr;
-    gap: 12px;
-    margin-top: 1rem;
-}
-.insight-card {
-    background: #111A2E;
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 8px;
-    padding: 16px 18px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 0.82rem;
-    color: #CBD5E1;
-    line-height: 1.6;
-    min-height: 90px;
-}
-.ins-icon {
-    color: #3B82F6;
-    flex-shrink: 0;
-    font-size: 0.65rem;
-    padding-top: 0.35rem;
-}
-.insight-card.empty {
-    visibility: hidden;
-}
-
-/* ── Insights heading ──────────────────────────────────────────────────── */
-h3.insights-heading {
-    font-size: 1.1rem !important;
-    font-weight: 700 !important;
-    color: #E6EDF6 !important;
-    margin-bottom: 0 !important;
-}
-
-/* ── Misc ──────────────────────────────────────────────────────────────── */
-hr {
-    border-color: rgba(255,255,255,0.05) !important;
-    margin: 2rem 0 !important;
-}
-.stCaption, [data-testid="stCaptionContainer"] p {
+hr { border-color: rgba(255,255,255,0.05) !important; margin: 2rem 0 !important; }
+.stCaption p, [data-testid='stCaptionContainer'] p {
     color: #6C7A99 !important;
     font-size: 0.77rem !important;
 }
-footer { visibility: hidden; }
+footer    { visibility: hidden; }
 #MainMenu { visibility: hidden; }
-</style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
+
+# ── Inline style constants (all custom HTML uses these – no CSS class deps) ───
+_F  = "font-family:Inter,system-ui,sans-serif;"
+
+_SH = (                                      # section header
+    f"{_F}font-size:0.67rem;font-weight:700;letter-spacing:0.13em;"
+    "text-transform:uppercase;color:#6C7A99;"
+    "margin:2.5rem 0 1rem 0;padding-bottom:0.5rem;"
+    "border-bottom:1px solid rgba(255,255,255,0.05);"
+)
+_SR = "display:flex;gap:14px;align-items:stretch;width:100%;margin-bottom:0.25rem;"  # card row
+_SC = (                                      # card
+    "flex:1;background:#111A2E;"
+    "border:1px solid rgba(255,255,255,0.05);border-radius:8px;"
+    "padding:20px 22px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.3);"
+    "display:flex;flex-direction:column;gap:10px;min-height:108px;"
+)
+_SL = (                                      # card label
+    f"{_F}font-size:0.68rem;font-weight:700;letter-spacing:0.09em;"
+    "text-transform:uppercase;color:#A8B3CF;line-height:1.45;"
+)
+_SSL = (                                     # card sub-label
+    "display:block;font-size:0.85em;font-weight:500;"
+    "letter-spacing:0;text-transform:none;color:#6C7A99;margin-top:2px;"
+)
+_SB  = "display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;"   # card body row
+_SV  = (                                     # card value
+    f"{_F}font-size:1.9rem;font-weight:700;color:#E6EDF6;"
+    "font-variant-numeric:tabular-nums;letter-spacing:-0.02em;line-height:1;"
+)
+_SD  = f"{_F}font-size:0.82rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;"
+_SDP = _SD + "color:#22C55E;"               # delta positive
+_SDN = _SD + "color:#EF4444;"               # delta negative
+_SDU = _SD + "color:#A8B3CF;"               # delta neutral
+_SS  = f"{_F}font-size:0.7rem;color:#6C7A99;font-variant-numeric:tabular-nums;margin-top:-4px;"  # card sub-note
+
+_IG  = "display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:1rem;"   # insight grid
+_IC  = (                                     # insight card
+    "background:#111A2E;border:1px solid rgba(255,255,255,0.05);border-radius:8px;"
+    "padding:16px 18px;box-shadow:0 4px 16px rgba(0,0,0,0.2);"
+    "display:flex;align-items:flex-start;gap:10px;"
+    f"{_F}font-size:0.82rem;color:#CBD5E1;line-height:1.6;min-height:90px;"
+)
+_II  = "color:#3B82F6;flex-shrink:0;font-size:0.65rem;padding-top:0.35rem;"  # insight icon
+
+
+# ── Helper: render a section header ───────────────────────────────────────────
+def section_head(text):
+    st.markdown(f'<div style="{_SH}">{text}</div>', unsafe_allow_html=True)
+
+
+# ── Helper: build a metric card HTML string ───────────────────────────────────
+def mcard(label, sublabel, value, delta=None, pos=None, sub=None):
+    """
+    label    : main label text (uppercase)
+    sublabel : smaller sub-label below label (e.g. date context)
+    value    : primary value string
+    delta    : delta string shown INLINE to the RIGHT of value
+    pos      : True → green, False → red, None → muted grey
+    sub      : optional footnote beneath value row
+    """
+    sl_html = f'<span style="{_SSL}">{sublabel}</span>' if sublabel else ""
+    ds      = _SDP if pos is True else (_SDN if pos is False else _SDU)
+    d_html  = f'<span style="{ds}">{delta}</span>' if delta else ""
+    s_html  = f'<div style="{_SS}">{sub}</div>' if sub else ""
+    return (
+        f'<div style="{_SC}">'
+          f'<div style="{_SL}">{label}{sl_html}</div>'
+          f'<div>'
+            f'<div style="{_SB}">'
+              f'<span style="{_SV}">{value}</span>'
+              f'{d_html}'
+            f'</div>'
+            f'{s_html}'
+          f'</div>'
+        f'</div>'
+    )
+
 
 # ── Config & data ──────────────────────────────────────────────────────────────
 @st.cache_data
@@ -487,114 +429,68 @@ b5_contribution = (b5_yoy_delta_m / sys_yoy_delta_m * 100) if sys_yoy_delta_m el
 # ── Format helpers ─────────────────────────────────────────────────────────────
 def fbn(v):       return f"${v:,.1f}B"  if v is not None else "—"
 def fpct(v):      return f"{v:.2f}%"    if v is not None else "—"
-def fpp(v):       return f"{v:+.2f}pp"  if v is not None else "—"
-def fsign_pct(v): return f"{v:+.2f}%"   if v is not None else None
+def fsign_pct(v): return f"{v:+.2f}%"  if v is not None else None
 
-# ── Metric card HTML builder ───────────────────────────────────────────────────
-def mcard(label, value, delta=None, pos=None, sub=None):
-    """
-    label : HTML string for card label (use <small> for subtitle)
-    value : main value string
-    delta : delta string shown inline RIGHT of value (optional)
-    pos   : True → green (#22C55E), False → red (#EF4444), None → muted grey
-    sub   : optional small text beneath the value row
-    """
-    cls    = "pos" if pos is True else ("neg" if pos is False else "neu")
-    d_html = f'<span class="mcard-delta {cls}">{delta}</span>' if delta else ""
-    s_html = f'<div class="mcard-sub">{sub}</div>' if sub else ""
-    return (
-        f'<div class="mcard">'
-        f'  <div class="mcard-label">{label}</div>'
-        f'  <div>'
-        f'    <div class="mcard-body">'
-        f'      <span class="mcard-value">{value}</span>'
-        f'      {d_html}'
-        f'    </div>'
-        f'    {s_html}'
-        f'  </div>'
-        f'</div>'
-    )
-
-# ── MARKET SIZE section ────────────────────────────────────────────────────────
-st.markdown('<div class="section-head">Market Size</div>', unsafe_allow_html=True)
+# ── MARKET SIZE ────────────────────────────────────────────────────────────────
+section_head("Market Size")
 
 lat_str = latest.strftime('%b %Y')
 
-# Card 1 – Total system FUM
 c1_delta, c1_pos = None, None
 if mom_delta_bn is not None and mom_pct is not None:
     c1_delta = f"{mom_delta_bn:+,.1f}B ({mom_pct:+.2f}%) MoM"
     c1_pos   = mom_delta_bn > 0
 
-# Card 2 – Big 5 FUM
 c2_delta, c2_pos = None, None
 if b5_mom_delta_bn is not None and b5_mom_pct is not None:
     c2_delta = f"{b5_mom_delta_bn:+,.1f}B ({b5_mom_pct:+.2f}%) MoM"
     c2_pos   = b5_mom_delta_bn > 0
 
-# Card 3 – Big 5 share
 c3_delta, c3_pos = None, None
 share_parts = []
-if b5_shr_pp_mom is not None:
-    share_parts.append(f"{b5_shr_pp_mom:+.2f}pp MoM")
-if b5_shr_pp_yoy is not None:
-    share_parts.append(f"{b5_shr_pp_yoy:+.2f}pp YoY")
+if b5_shr_pp_mom is not None: share_parts.append(f"{b5_shr_pp_mom:+.2f}pp MoM")
+if b5_shr_pp_yoy is not None: share_parts.append(f"{b5_shr_pp_yoy:+.2f}pp YoY")
 if share_parts:
     c3_delta = "  ·  ".join(share_parts)
     c3_pos   = (b5_shr_pp_mom > 0) if b5_shr_pp_mom is not None else None
 
-ms_html = (
-    '<div class="metric-flex">'
-    + mcard(
-        f'Total Residential Loans<br><small>All ADIs · as at {lat_str}</small>',
-        fbn(sys_lat / 1000), c1_delta, c1_pos,
-    )
-    + mcard(
-        f'Big 5 Residential Lending<br><small>as at {lat_str}</small>',
-        fbn(b5_lat / 1000), c2_delta, c2_pos,
-    )
-    + mcard(
-        f'Big 5 Market Share<br><small>as at {lat_str}</small>',
-        fpct(b5_shr_lat * 100) if b5_shr_lat else "—",
-        c3_delta, c3_pos,
-    )
-    + '</div>'
+st.markdown(
+    f'<div style="{_SR}">'
+    + mcard("Total Residential Loans", f"All ADIs · as at {lat_str}",
+            fbn(sys_lat / 1000), c1_delta, c1_pos)
+    + mcard("Big 5 Residential Lending", f"as at {lat_str}",
+            fbn(b5_lat / 1000), c2_delta, c2_pos)
+    + mcard("Big 5 Market Share", f"as at {lat_str}",
+            fpct(b5_shr_lat * 100) if b5_shr_lat else "—",
+            c3_delta, c3_pos)
+    + '</div>',
+    unsafe_allow_html=True,
 )
-st.markdown(ms_html, unsafe_allow_html=True)
 
-# ── GROWTH section ─────────────────────────────────────────────────────────────
-st.markdown('<div class="section-head">Growth</div>', unsafe_allow_html=True)
+# ── GROWTH ─────────────────────────────────────────────────────────────────────
+section_head("Growth")
 
 prev_str      = prev_period.strftime('%b %Y') if prev_period else ""
 yoy_str       = yoy_period.strftime('%b %Y')
 inception_str = inception_period.strftime('%b %Y')
 
-g1_pos = (mom_pct  > 0) if mom_pct  is not None else None
-g2_pos = (yoy_pct  > 0) if yoy_pct  is not None else None
-
-gr_html = (
-    '<div class="metric-flex">'
-    + mcard(
-        f'Change vs Prior Month<br><small>{prev_str} → {lat_str}</small>',
-        fbn(mom_delta_bn),
-        fsign_pct(mom_pct),
-        g1_pos,
-    )
-    + mcard(
-        f'Year-on-Year Change<br><small>{yoy_str} → {lat_str}</small>',
-        fbn(yoy_delta_bn),
-        fsign_pct(yoy_pct),
-        g2_pos,
-    )
-    + mcard(
-        f'Average Annual Growth<br><small>{inception_str} → {lat_str}</small>',
-        fpct(avg_annual_growth) if avg_annual_growth else "—",
-        None, None,
-        "Compound annual growth rate from inception",
-    )
-    + '</div>'
+st.markdown(
+    f'<div style="{_SR}">'
+    + mcard("Change vs Prior Month", f"{prev_str} → {lat_str}",
+            fbn(mom_delta_bn),
+            fsign_pct(mom_pct),
+            (mom_pct > 0) if mom_pct is not None else None)
+    + mcard("Year-on-Year Change", f"{yoy_str} → {lat_str}",
+            fbn(yoy_delta_bn),
+            fsign_pct(yoy_pct),
+            (yoy_pct > 0) if yoy_pct is not None else None)
+    + mcard("Average Annual Growth", f"{inception_str} → {lat_str}",
+            fpct(avg_annual_growth) if avg_annual_growth else "—",
+            None, None,
+            "Compound annual growth rate from inception")
+    + '</div>',
+    unsafe_allow_html=True,
 )
-st.markdown(gr_html, unsafe_allow_html=True)
 
 # ── Insights ───────────────────────────────────────────────────────────────────
 def inst_yoy_analysis(v_col, sys_col):
@@ -681,7 +577,7 @@ if avg_annual_growth is not None:
 st.divider()
 st.markdown("### Insights")
 
-# Pad to full rows of 3 so grid is even and all cards equal height
+# Pad to full rows of 3 for even grid
 while len(bullets) % 3 != 0:
     bullets.append("")
 
@@ -689,18 +585,15 @@ cards_html = ""
 for b in bullets:
     if b:
         cards_html += (
-            f'<div class="insight-card">'
-            f'  <span class="ins-icon">▸</span>'
-            f'  <span>{bold(b)}</span>'
+            f'<div style="{_IC}">'
+            f'<span style="{_II}">▸</span>'
+            f'<span>{bold(b)}</span>'
             f'</div>'
         )
     else:
-        cards_html += '<div class="insight-card empty"></div>'
+        cards_html += f'<div style="{_IC}opacity:0;pointer-events:none;"></div>'
 
-st.markdown(
-    f'<div class="insights-grid">{cards_html}</div>',
-    unsafe_allow_html=True,
-)
+st.markdown(f'<div style="{_IG}">{cards_html}</div>', unsafe_allow_html=True)
 
 st.caption(
     "Source: APRA Monthly ADI Statistics  ·  Values in $billions  ·  "
