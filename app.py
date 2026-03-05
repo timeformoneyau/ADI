@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import ui_style
+import charts  # noqa: F401  — available for future chart helpers
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Australian Residential Lending ($FUM)", layout="wide")
@@ -105,6 +107,7 @@ footer    { visibility: hidden; }
 #MainMenu { visibility: hidden; }
 """
 st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
+ui_style.apply_global_css()  # adds card, section, toolbar, and typography helpers
 
 # ── Inline style constants (all custom HTML uses these – no CSS class deps) ───
 _F  = "font-family:Inter,system-ui,sans-serif;"
@@ -311,12 +314,20 @@ CHART_LAYOUT = dict(
     ),
 )
 
+def _hex_to_rgba(hex_color, alpha=0.7):
+    """Convert a #RRGGBB hex colour to an rgba() CSS string."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def make_stacked_area(series_list):
     fig = go.Figure()
     period_totals = pd.Series(0.0, index=all_periods)
     for s in series_list:
         period_totals += s["data"].reindex(all_periods).fillna(0) / 1000
 
+    # ── Balance area traces (left Y axis) ─────────────────────────────────
     for s in series_list:
         vals_bn    = s["data"].reindex(all_periods).fillna(0) / 1000
         pct_series = (vals_bn / period_totals.replace(0, np.nan) * 100).fillna(0)
@@ -324,7 +335,8 @@ def make_stacked_area(series_list):
         fig.add_trace(go.Scatter(
             x             = all_periods,
             y             = vals_bn,
-            name          = s["name"],
+            name          = f"{s['name']} (balance)",
+            legendgroup   = s["name"],
             mode          = "lines",
             stackgroup    = "one",
             fillcolor     = s["color"],
@@ -335,7 +347,42 @@ def make_stacked_area(series_list):
                 "<extra>" + s["name"] + "</extra>"
             ),
         ))
-    fig.update_layout(**CHART_LAYOUT)
+
+    # ── Share % line traces (right Y axis) ────────────────────────────────
+    for s in series_list:
+        vals_bn    = s["data"].reindex(all_periods).fillna(0) / 1000
+        pct_series = (vals_bn / period_totals.replace(0, np.nan) * 100).fillna(0)
+        fig.add_trace(go.Scatter(
+            x           = all_periods,
+            y           = pct_series,
+            name        = f"{s['name']} (share%)",
+            legendgroup = s["name"],
+            mode        = "lines",
+            yaxis       = "y2",
+            line        = dict(
+                color = _hex_to_rgba(s["color"], alpha=0.75),
+                width = 1.5,
+                dash  = "dot",
+            ),
+            opacity     = 0.7,
+            hoverinfo   = "skip",
+        ))
+
+    # Build layout locally so we can add yaxis2 without mutating CHART_LAYOUT
+    layout = dict(**CHART_LAYOUT)
+    layout["yaxis2"] = dict(
+        overlaying = "y",
+        side       = "right",
+        range      = [0, 100],
+        ticksuffix = "%",
+        showgrid   = False,
+        zeroline   = False,
+        tickfont   = dict(color="#6C7A99", size=13),
+        title      = dict(text="Market share", font=dict(color="#6C7A99", size=13)),
+    )
+    # Widen right margin to give room for Y2 tick labels alongside the legend
+    layout["margin"] = dict(**CHART_LAYOUT["margin"], r=220)
+    fig.update_layout(**layout)
     return fig
 
 # ── Build series ───────────────────────────────────────────────────────────────
