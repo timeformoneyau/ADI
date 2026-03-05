@@ -381,7 +381,7 @@ def make_stacked_area(series_list):
         title      = dict(text="Market share", font=dict(color="#6C7A99", size=13)),
     )
     # Widen right margin to give room for Y2 tick labels alongside the legend
-    layout["margin"] = dict(**CHART_LAYOUT["margin"], r=220)
+    layout["margin"] = {**CHART_LAYOUT["margin"], "r": 220}
     fig.update_layout(**layout)
     return fig
 
